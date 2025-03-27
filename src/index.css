@@ -1,8 +1,20 @@
+:root {
+  --editor-bg: #1e1e1e;
+  --sidebar-bg: #252526;
+  --panel-bg: #333333;
+  --primary-color: #0078d7;
+  --text-color: #e0e0e0;
+  --border-color: #444444;
+  --hover-color: #3e3e3e;
+  --active-color: #2a2d2e;
+  --timeline-bg: #181818;
+}
+
 body {
   margin: 0;
-  padding: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
-    Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+  font-family: "Segoe UI", system-ui, sans-serif;
+  background-color: var(--editor-bg);
+  color: var(--text-color);
 }
 
 #root {
@@ -10,22 +22,22 @@ body {
   display: flex;
   flex-direction: column;
 }
-/* Prevent text selection during drag */
-.no-select {
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
 }
 
-/* Smooth transitions */
-.draggable {
-  transition: transform 0.1s ease-out;
+::-webkit-scrollbar-track {
+  background: var(--panel-bg);
 }
 
-/* Improve rendering performance */
-.performance {
-  backface-visibility: hidden;
-  perspective: 1000px;
-  transform-style: preserve-3d;
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-color);
 }

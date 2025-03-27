@@ -12,7 +12,9 @@
   "dependencies": {
     "@mantine/core": "^7.17.2",
     "@mantine/hooks": "^7.17.2",
+    "@mantine/styles": "^6.0.22",
     "@reduxjs/toolkit": "^2.6.1",
+    "@tabler/icons-react": "^3.31.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-draggable": "^4.4.6",

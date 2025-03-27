@@ -53,6 +53,17 @@ const editorSlice = createSlice({
         state.isPlaying = false;
       }
     },
+    removeMediaItem: (state, action) => {
+      // Remove the item with the given ID
+      state.mediaItems = state.mediaItems.filter(
+        (item) => item.id !== action.payload
+      );
+
+      // Deselect if the deleted item was selected
+      if (state.selectedItem?.id === action.payload) {
+        state.selectedItem = null;
+      }
+    },
     seekTime: (state, action) => {
       state.currentTime = Math.max(0, Math.min(action.payload, state.duration));
     },
@@ -74,6 +85,7 @@ export const {
   seekTime,
   setDuration,
   setPlaybackRate,
+  removeMediaItem,
 } = editorSlice.actions;
 
 export default editorSlice.reducer;

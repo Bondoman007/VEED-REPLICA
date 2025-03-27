@@ -1,6 +1,10 @@
 import React, { useRef, useEffect, useCallback, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { updateMediaItem, selectItem } from "../../features/editorSlice";
+import {
+  updateMediaItem,
+  removeMediaItem,
+  selectItem,
+} from "../../features/editorSlice";
 import useDrag from "./hooks/useDrag";
 import useResize from "./hooks/useResize";
 
@@ -29,7 +33,7 @@ const CanvasItem = React.memo(({ item, isVisible, currentTime }) => {
     };
   }, [item.type]);
 
-  // Smooth video playback handler
+  // Handle video playback
   const handleVideoPlayback = useCallback(async () => {
     if (item.type !== "video" || !videoRef.current || !isVideoReady) return;
 
@@ -37,22 +41,17 @@ const CanvasItem = React.memo(({ item, isVisible, currentTime }) => {
     const targetTime = currentTime - item.startTime;
 
     try {
-      // Only update if significant difference (>0.1s) or first render
       if (Math.abs(video.currentTime - targetTime) > 0.1) {
         video.currentTime = targetTime;
       }
-
-      // Apply playback rate
       video.playbackRate = playbackRate;
 
-      // Handle play/pause state
       if (
         isPlaying &&
         isVisible &&
         targetTime >= 0 &&
         targetTime <= item.duration
       ) {
-        // Ensure video isn't already playing to avoid AbortError
         if (video.paused) {
           await video.play();
         }
@@ -61,15 +60,12 @@ const CanvasItem = React.memo(({ item, isVisible, currentTime }) => {
       }
     } catch (error) {
       console.log("Playback error handled:", error.name);
-      // Fallback to paused state if play fails
       video.pause();
     }
   }, [currentTime, isPlaying, isVisible, item, playbackRate, isVideoReady]);
 
   useEffect(() => {
     handleVideoPlayback();
-
-    // Smooth update loop for visible videos
     let rafId;
     if (isVisible && item.type === "video") {
       const update = () => {
@@ -78,38 +74,33 @@ const CanvasItem = React.memo(({ item, isVisible, currentTime }) => {
       };
       rafId = requestAnimationFrame(update);
     }
-
     return () => {
       if (rafId) cancelAnimationFrame(rafId);
     };
   }, [handleVideoPlayback, isVisible, item.type]);
 
-  // Rest of your component remains the same...
+  // Handle drag
   const handleDrag = useCallback(
     (pos) => {
+      dispatch(updateMediaItem({ id: item.id, x: pos.x, y: pos.y }));
+    },
+    [dispatch, item.id]
+  );
+
+  // Handle resize
+  const handleResizeEnd = useCallback(
+    (size) => {
       dispatch(
-        updateMediaItem({
-          id: item.id,
-          x: pos.x,
-          y: pos.y,
-        })
+        updateMediaItem({ id: item.id, width: size.width, height: size.height })
       );
     },
     [dispatch, item.id]
   );
 
-  const handleResizeEnd = useCallback(
-    (size) => {
-      dispatch(
-        updateMediaItem({
-          id: item.id,
-          width: size.width,
-          height: size.height,
-        })
-      );
-    },
-    [dispatch, item.id]
-  );
+  // Remove item from canvas
+  const handleDelete = () => {
+    dispatch(removeMediaItem(item.id));
+  };
 
   useDrag(ref, { x: item.x, y: item.y }, handleDrag);
   useResize(ref, handleResizeEnd);
@@ -157,11 +148,35 @@ const CanvasItem = React.memo(({ item, isVisible, currentTime }) => {
             objectFit: "cover",
             pointerEvents: "none",
           }}
-          muted
           playsInline
           preload="auto"
         />
       )}
+
+      {/* Delete Button */}
+      <button
+        onClick={handleDelete}
+        style={{
+          position: "fixed",
+          top: "-2px",
+          right: "-2px",
+          background: "rgba(30, 28, 28, 0.7)",
+          color: "#fff",
+          border: "none",
+          borderRadius: "50%",
+          width: "24px",
+          height: "24px",
+          fontSize: "14px",
+          fontWeight: "bold",
+          cursor: "pointer",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        ✕
+      </button>
+
       {selectedItem?.id === item.id && (
         <div
           className="resize-handle"

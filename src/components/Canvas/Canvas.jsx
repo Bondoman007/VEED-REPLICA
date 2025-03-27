@@ -1,30 +1,43 @@
-// components/Canvas/Canvas.jsx
 import React, { useRef, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Box } from "@mantine/core";
-import { setCurrentTime } from "../../features/editorSlice";
+import { setCurrentTime, togglePlay } from "../../features/editorSlice";
 import CanvasItem from "./CanvasItem";
 
 const Canvas = () => {
   const canvasRef = useRef(null);
   const mediaItems = useSelector((state) => state.editor.mediaItems);
-  const currentTime = useSelector((state) => state.editor.currentTime);
-  const isPlaying = useSelector((state) => state.editor.isPlaying);
+  const { currentTime, isPlaying, duration } = useSelector(
+    (state) => state.editor
+  );
   const dispatch = useDispatch();
+  const lastTimeRef = useRef(0);
 
   useEffect(() => {
     let animationFrame;
-    let lastTime = 0;
+    let lastTimestamp = 0;
+    let accumulatedTime = 0;
 
     const updateTime = (timestamp) => {
-      if (!lastTime) lastTime = timestamp;
-      const delta = (timestamp - lastTime) / 1000;
+      if (!lastTimestamp) lastTimestamp = timestamp;
+      const delta = (timestamp - lastTimestamp) / 1000;
+      lastTimestamp = timestamp;
 
       if (isPlaying) {
-        dispatch(setCurrentTime(currentTime + delta));
+        accumulatedTime += delta;
+
+        // Update at 60fps for smooth playback
+        if (accumulatedTime >= 1 / 60) {
+          const newTime = currentTime + accumulatedTime;
+          dispatch(setCurrentTime(Math.min(newTime, duration)));
+          accumulatedTime = 0;
+
+          if (newTime >= duration) {
+            dispatch(togglePlay());
+          }
+        }
       }
 
-      lastTime = timestamp;
       animationFrame = requestAnimationFrame(updateTime);
     };
 
@@ -33,7 +46,7 @@ const Canvas = () => {
     return () => {
       cancelAnimationFrame(animationFrame);
     };
-  }, [isPlaying, currentTime, dispatch]);
+  }, [isPlaying, currentTime, duration, dispatch]);
 
   return (
     <Box
@@ -50,7 +63,14 @@ const Canvas = () => {
       {mediaItems.map((item) => {
         const isVisible =
           currentTime >= item.startTime && currentTime <= item.endTime;
-        return isVisible ? <CanvasItem key={item.id} item={item} /> : null;
+        return (
+          <CanvasItem
+            key={item.id}
+            item={item}
+            isVisible={isVisible}
+            currentTime={currentTime}
+          />
+        );
       })}
     </Box>
   );
